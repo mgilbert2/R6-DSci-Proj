@@ -63,3 +63,21 @@ ggplot(high_pick_rate_weapons, aes(x = Weapon)) +
        x = "Weapons", 
        y = "Count") +
   theme_minimal()
+
+
+
+#not handgun
+# Filter out rows where Type is "handgun"
+filtered_table <- my_table_long %>% filter(Type != "Handgun")
+
+# Get the unique weapons from the Weapon column after filtering
+unique_weapons <- unique(filtered_table$Weapon)
+
+# Count the number of unique weapons
+number_of_unique_weapons <- length(unique_weapons)
+
+# Print the result
+print(number_of_unique_weapons)
+
+view(unique_weapons)
+

@@ -32,9 +32,11 @@ Research Question: Does higher levels of cognitive strain due to larger spread i
 ```{r}
 # Dependencies
 library(tidyverse)
+library(ggrepel)
 library(skimr)
 library(rvest)
 library(googlesheets4)
+library(viridis)
 gs4_auth()
 ```
 
@@ -102,8 +104,9 @@ The next packaging issue is the concatenated "overlapping" of operators per each
 # view(my_table_split)
 # 
 # ## There's a major issue missing IQ LOL because its two uppercase letters
-
-
+## Jager has a special char rename. 
+my_table<- my_table %>%
+  mutate(Operator = ifelse(Operator == "Jäger", "Jager", Operator))
 # Splitting the operator column based on uppercase letters
 # Split the Operator column and unnest the result
 my_table_split <- my_table %>%
@@ -115,7 +118,6 @@ my_table_split <- my_table %>%
 
 # View the result
 print(my_table_split)
-view(my_table_split)
 
 ```
 
@@ -209,11 +211,34 @@ ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
   theme_minimal() +
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
   scale_fill_brewer(palette = "Set3", name = "Weapon")
+
+# Load necessary libraries
+install.packages(c("ggplot2", "viridis"))
+
+
+# Plot
+ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
+  geom_bar() +
+  labs(title = "High Pick Rate Operators and Their Weapons", 
+       x = "Operator", 
+       y = "Count") +
+  theme_minimal() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  scale_fill_viridis_c(name = "Weapon", discrete = TRUE)
+
 ```
 
 ## Data Source #3 
 		
 ### Recoil statistics
+These statistics come from previous analysis here: "https://medium.com/@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688"
+
+When using an automatic-firing weapon, looking at the 4th successive bullets distance from the center at start of firing, they measured how high (y) and how far to the side (x) it reached, in pixels.
+
+Vertical and Horizontal scores were calculated and summed for each weapon and recorded on a scale of the smallest recoil gets one point, the bigger gets closer to zero points and into the negative points for the worst. Horizontal movement gets a weight of 0.9 for and 0.6 for vertical (1.5x both weights then averaged) to reach the overall score for recoil.
+This means in total a gun can get about point total for recoil.
+
+It is important to note that the original analyst used each weapon with the same "equipments" to control consistency.
 		
 		I want to extract column "L" containing the recoil scores, as well as "B" for the associated weapon.
 		There are two separate sheets one is attacker and one is for defenders so I will repeat the extraction for both sheets. 
@@ -244,12 +269,116 @@ defrecoil_data <- cbind(SCOAR_DWEAPON, SCOAR_DRECOIL)
 # View the merged data frame
 print(defrecoil_data)
 
-## TODO these dont have col names!!
 ```
 		
 		
 ```{r}
 
+combo_recoil <- rbind(defrecoil_data, atrecoil_data)
+combo_recoil<- unique(combo_recoil)
+## interesting 71 obs... still some missing, 
 ```
+Now I need to assign recoil to weapons in my dataset. But first... what are the missing guns besides the handguns? is that fit for my research still? 
 
+There were slight discrepancies in spelling for each weapon, but besides that, some of the weapon data was not fit for my research question.
+
+Handguns and machine pistols in this dataset are used as "Secondary" weapons in the game. This is not what I need to look at because that is not the main weapon for the operators. Marksman Rifles have relatively little to NO kick at all between shots due to the fact that they function as single-fire weapons. So in this case I want to filter them out because they do not drift from target because they're not automatic weapons. 
+
+Shotguns have massive variability again in the functionality. These weapons fire single "rounds" that have a spread of bullets in a blob. 
+Not a weapon that calls for countering recoil in the same manner as auto-fire weapons, so we will filter these out as well. 
+
+```{r}
+# Filtering the table
+filtered_table <- my_table_long %>% 
+  filter(
+    Weapon != "AR-15.50",
+    Type != "Handgun", 
+    Type != "Marksman Rifle",
+    Type != "Shotgun",
+    !(Type == "Machine Pistol" & Weapon != "SPSMG9")
+  )
+
+# Get the unique weapons from the Weapon column after filtering
+unique_weapons <- unique(filtered_table$Weapon)
+
+# Count the number of unique weapons
+number_of_unique_weapons <- length(unique_weapons)
+
+# Print the result
+print(number_of_unique_weapons)
+
+```
+Now that the dimensions match from the combined recoil scores data frame and the weapons in the original data frame, and the "unfit" weapons are removed I merged the two data frames
+```{r}
+fulldf<- merge(filtered_table, combo_recoil, by = "Weapon", all.x = TRUE)
+
+print(fulldf)
+```
+## Plot
+```{r}
+ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
+  geom_point(aes(color = Recoil), size = 3) + 
+  geom_text_repel(aes(label = Weapon), box.padding = 0.5) +
+  labs(title = "Weapon Pick Rate vs Recoil",
+       x = "Pick Rate",
+       y = "Recoil") +
+  theme_minimal() +
+  scale_color_gradient(low = "blue", high = "red")
+
+```
 	
+```{r}
+
+ggplot(fulldf, aes(x=PickRate, y=Recoil)) + 
+  geom_hex(bins=30) + 
+  scale_fill_viridis_c() +
+  labs(title = "Hexbin plot of Weapon PickRate vs Recoil", 
+       x = "PickRate", 
+       y = "Recoil", 
+       fill = "Frequency") +
+  theme_minimal()
+
+```
+```{r}
+# Discretize the Recoil column
+fulldf$RecoilRange <- cut(fulldf$Recoil, 
+                          breaks=c(-Inf, -0.5, 0, 0.5, Inf), 
+                          labels=c("Very High Recoil", "High Recoil", "Medium Recoil", "Low Recoil"))
+# Count the number of weapons in each combination of Pick Rate and Recoil range
+heatmap_data <- as.data.frame(table(fulldf$PickRate, fulldf$RecoilRange))
+colnames(heatmap_data) <- c("PickRate", "RecoilRange", "Count")
+
+ggplot(heatmap_data, aes(x=PickRate, y=RecoilRange, fill=Count)) + 
+  geom_tile() +
+  geom_text(aes(label=Count), vjust=1) +
+  scale_fill_gradient(low="white", high="blue") +
+  labs(title="Number of Weapons by Pick Rate and Recoil Range",
+       x="Pick Rate",
+       y="Recoil Range",
+       fill="Number of Weapons") +
+  theme_minimal()
+```
+Stats time :P
+```{r}
+# Convert PickRate into an ordinal variable
+fulldf$PickRateOrdinal <- as.numeric(factor(fulldf$PickRate, levels=c("Low Pick Rate", "Average Pick Rate", "High Pick Rate")))
+
+cor.test(fulldf$Recoil, fulldf$PickRateOrdinal, method="spearman")
+
+```
+This indicates a very weak positive correlation between recoil and pick rate. In practical terms, this means there is a slight tendency that as recoil increases, the pick rate also slightly increases. However, given the value is so close to 0, this correlation is not practically meaningful.
+
+The p-value is 0.9805 Since this value is much greater than 0.05 (a common significance threshold), we fail to reject the null hypothesis, suggesting that there's no statistically significant correlation between recoil and pick rate in the population from which my sample was drawn.
+
+```{r}
+high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
+
+ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + # Makes the plot horizontal for better readability with weapon names
+  labs(title = "Recoil of High Pick Rate Weapons",
+       x = "Weapon",
+       y = "Recoil Value") +
+  theme_minimal()
+```
+hmm.. finka odd one out. A high and low-rate recoil weapon. 
