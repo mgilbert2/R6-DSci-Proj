@@ -228,7 +228,7 @@ ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
 
 ```
 
-## Data Source #3 
+# Data Source #3 
 		
 ### Recoil statistics
 These statistics come from previous analysis here: "https://medium.com/@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688"
@@ -314,7 +314,7 @@ fulldf<- merge(filtered_table, combo_recoil, by = "Weapon", all.x = TRUE)
 
 print(fulldf)
 ```
-## Plot
+# Plot
 ```{r}
 ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
   geom_point(aes(color = Recoil), size = 3) + 
@@ -382,3 +382,9 @@ ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
   theme_minimal()
 ```
 hmm.. finka odd one out. A high and low-rate recoil weapon. 
+
+# Limitations
+If I had quantitative statistics for the Pick Rate column that may be helpful to see a significance. The Pick Rate column is just 3 levels of category which is not descriptive enough in this case to really pull any trend out. 
+
+Additionally for my next steps I will explore "Ban" Rates instead of pick rates to see any correlation between highly-banned operators and their weapon's recoil.
+
