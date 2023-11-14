@@ -202,29 +202,26 @@ ggplot(high_pick_rate_weapons, aes(x = Weapon)) +
 # Filter data for 'High Pick Rate'
 high_pick_data <- my_table_long[my_table_long$`PickRate` == "High Pick Rate", ]
 
-# Plot
-ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
-  geom_bar() +
-  labs(title = "High Pick Rate Operators and Their Weapons", 
-       x = "Operator", 
-       y = "Count") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_fill_brewer(palette = "Set3", name = "Weapon")
+# # Plot
+# ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
+#   geom_bar() +
+#   labs(title = "High Pick Rate Operators and Their Weapons", 
+#        x = "Operator", 
+#        y = "Count") +
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   scale_fill_brewer(palette = "Set3", name = "Weapon"
 
-# Load necessary libraries
-install.packages(c("ggplot2", "viridis"))
-
-
-# Plot
-ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
-  geom_bar() +
-  labs(title = "High Pick Rate Operators and Their Weapons", 
-       x = "Operator", 
-       y = "Count") +
-  theme_minimal() +
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-  scale_fill_viridis_c(name = "Weapon", discrete = TRUE)
+# 
+# # Plot
+# ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
+#   geom_bar() +
+#   labs(title = "High Pick Rate Operators and Their Weapons", 
+#        x = "Operator", 
+#        y = "Count") +
+#   theme_minimal() +
+#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+#   scale_fill_viridis_c(name = "Weapon", discrete = TRUE)
 
 ```
 
@@ -387,4 +384,3 @@ hmm.. finka odd one out. A high and low-rate recoil weapon.
 If I had quantitative statistics for the Pick Rate column that may be helpful to see a significance. The Pick Rate column is just 3 levels of category which is not descriptive enough in this case to really pull any trend out. 
 
 Additionally for my next steps I will explore "Ban" Rates instead of pick rates to see any correlation between highly-banned operators and their weapon's recoil.
-
