@@ -381,6 +381,10 @@ ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
 hmm.. finka odd one out. A high and low-rate recoil weapon. 
 
 # Limitations
-If I had quantitative statistics for the Pick Rate column that may be helpful to see a significance. The Pick Rate column is just 3 levels of category which is not descriptive enough in this case to really pull any trend out. 
+If I had quantitative statistics for the Pick Rate column that may be helpful to see a significance. The Pick Rate column is just 3 levels of category which is not descriptive enough in this case to really pull any trend out. If I had the "raw data" that ubisoft does not formally release then I could see exact percentages for pick ratios of each operater per x amount of rounds in x amount of matches. 
 
-Additionally for my next steps I will explore "Ban" Rates instead of pick rates to see any correlation between highly-banned operators and their weapon's recoil.
+Similarly, the scores for recoil are not nearly as comprehensive as they are on Ubisoft's end. additionally, there are many additional attachments that aid in dampening recoil, these statistics are not accounted for in my data.
+
+Additionally for a next direction I should explore "Ban" Rates instead of pick rates to see any correlation between highly-banned operators and their weapon's  recoil. 
+
+This kind of exploration would probably benefit from factor analysis as well as mixed effects models, however my data is unfit for these purposes. Specifically, my features are not continuous and also not numeric. Multicollinearity: High correlations among some of these variables are likely, given that weapon attributes are often designed to balance each other (e.g., high damage might be balanced by high recoil). This could make it difficult to separate out distinct factors.
