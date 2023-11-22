@@ -378,7 +378,6 @@ ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
        y = "Recoil Value") +
   theme_minimal()
 ```
-hmm.. finka odd one out. A high and low-rate recoil weapon. 
 
 # Limitations
 If I had quantitative statistics for the Pick Rate column that may be helpful to see a significance. The Pick Rate column is just 3 levels of category which is not descriptive enough in this case to really pull any trend out. If I had the "raw data" that ubisoft does not formally release then I could see exact percentages for pick ratios of each operater per x amount of rounds in x amount of matches. 
