@@ -309,7 +309,7 @@ Now that the dimensions match from the combined recoil scores data frame and the
 ```{r}
 fulldf<- merge(filtered_table, combo_recoil, by = "Weapon", all.x = TRUE)
 
-print(fulldf)
+#print(fulldf)
 ```
 # Plot
 ```{r}
