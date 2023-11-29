@@ -344,16 +344,20 @@ fulldf$RecoilRange <- cut(fulldf$Recoil,
 # Count the number of weapons in each combination of Pick Rate and Recoil range
 heatmap_data <- as.data.frame(table(fulldf$PickRate, fulldf$RecoilRange))
 colnames(heatmap_data) <- c("PickRate", "RecoilRange", "Count")
+# Reorder the levels of PickRate
+heatmap_data$PickRate <- factor(heatmap_data$PickRate, levels = c("Low Pick Rate", "Average Pick Rate", "High Pick Rate"))
 
-ggplot(heatmap_data, aes(x=PickRate, y=RecoilRange, fill=Count)) + 
+# Plot
+ggplot(heatmap_data, aes(x = PickRate, y = RecoilRange, fill = Count)) + 
   geom_tile() +
-  geom_text(aes(label=Count), vjust=1) +
-  scale_fill_gradient(low="white", high="blue") +
-  labs(title="Number of Weapons by Pick Rate and Recoil Range",
-       x="Pick Rate",
-       y="Recoil Range",
-       fill="Number of Weapons") +
+  geom_text(aes(label = Count), vjust = 1) +
+  scale_fill_gradient(low = "white", high = "blue") +
+  labs(title = "Number of Weapons by Pick Rate and Recoil Range",
+       x = "Pick Rate",
+       y = "Recoil Range",
+       fill = "Number of Weapons") +
   theme_minimal()
+
 ```
 Stats time :P
 ```{r}
