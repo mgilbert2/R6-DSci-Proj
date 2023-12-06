@@ -37,7 +37,9 @@ library(skimr)
 library(rvest)
 library(googlesheets4)
 library(viridis)
+library(hexbin)
 gs4_auth()
+# googlesheets4::gs4_auth(force = TRUE)
 ```
 
 ## Data set
@@ -361,15 +363,21 @@ ggplot(heatmap_data, aes(x = PickRate, y = RecoilRange, fill = Count)) +
 ```
 Stats time :P
 ```{r}
-# Convert PickRate into an ordinal variable
-fulldf$PickRateOrdinal <- as.numeric(factor(fulldf$PickRate, levels=c("Low Pick Rate", "Average Pick Rate", "High Pick Rate")))
+# Ensure PickRate is an ordered factor
+fulldf$PickRate <- factor(fulldf$PickRate, levels = c("Low Pick Rate", "Average Pick Rate", "High Pick Rate"), ordered = TRUE)
 
-cor.test(fulldf$Recoil, fulldf$PickRateOrdinal, method="spearman")
+# Convert to numeric for correlation test
+fulldf$PickRateNumeric <- as.numeric(fulldf$PickRate)
+
+# Use Kendall's Tau for correlation
+cor.test(~ Recoil + PickRateNumeric, data = fulldf, method = "kendall") 
 
 ```
-This indicates a very weak positive correlation between recoil and pick rate. In practical terms, this means there is a slight tendency that as recoil increases, the pick rate also slightly increases. However, given the value is so close to 0, this correlation is not practically meaningful.
+Since my p-value is much greater than 0.05, I do not have evidence to reject the null hypothesis. In other words, there is no statistically significant correlation between Recoil and PickRate.
 
-The p-value is 0.9805 Since this value is much greater than 0.05 (a common significance threshold), we fail to reject the null hypothesis, suggesting that there's no statistically significant correlation between recoil and pick rate in the population from which my sample was drawn.
+This means changes in recoil scores do not consistently relate to changes in the ordinal pick rate categories in a way that increases or decreases together.
+
+However; Kendall's Tau requires that both variables be ordinal or continuous. In my dataframe, Recoil is continuous, and PickRateNumeric isordinal encoding of PickRate, with "Low Pick Rate" as 1, "Average Pick Rate" as 2, and "High Pick Rate" as 3.
 
 ```{r}
 high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
