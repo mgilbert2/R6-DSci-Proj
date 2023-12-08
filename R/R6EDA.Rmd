@@ -29,6 +29,8 @@ Research Question: Does higher levels of cognitive strain due to larger spread i
 
 # Setup
 
+## Notes on Install_Interesting study :-)! I reviewed the README file and noticed a note about the google access to the sheet, which i confirmed I had. It requried me to give tidyverse access to all my google sheets. So I wasn't sure if that was correct. Or would I need to uncomment the 'googlesheets4' line for access? When I left it commented out, the installation process kept on  running with no result :/. So sadly I couldn't run ##
+
 ```{r}
 # Dependencies
 library(tidyverse)
@@ -39,7 +41,7 @@ library(googlesheets4)
 library(viridis)
 library(hexbin)
 gs4_auth()
-# googlesheets4::gs4_auth(force = TRUE)
+#googlesheets4::gs4_auth(force = TRUE)
 ```
 
 ## Data set
