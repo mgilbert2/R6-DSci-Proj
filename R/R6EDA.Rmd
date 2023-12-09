@@ -3,6 +3,9 @@ title: "R6 Seige EDA"
 author: "Makenzy Gilbert"
 date: "2023-10-26"
 output: html_document
+editor_options: 
+  markdown: 
+    wrap: 72
 ---
 
 ```{r setup, include=FALSE}
@@ -13,23 +16,57 @@ knitr::opts_chunk$set(echo = TRUE)
 
 ## Introduction
 
-Rainbow Six Siege is a first-person shooter video game with two teams of five players each. One team acts as the "attackers," striving to complete objectives such as rescuing hostages or defusing bombs, while the other team serves as the "defenders," aiming to thwart their efforts. Before each match, players select their "operator," each of whom possesses a unique gadget or ability that significantly impacts the game's strategy.
+Rainbow Six Siege is a first-person shooter video game with two teams of
+five players each. One team acts as the "attackers," striving to
+complete objectives such as rescuing hostages or defusing bombs, while
+the other team serves as the "defenders," aiming to thwart their
+efforts. Before each match, players select their "operator," each of
+whom possesses a unique gadget or ability that significantly impacts the
+game's strategy.
 
-During the match, both teams can ban one attacking and one defending operator, preventing the opposing team from selecting those operators. This operator selection process adds an extra layer of strategy to the game. The rounds are fast-paced, requiring meticulous planning and quick reflexes.
+During the match, both teams can ban one attacking and one defending
+operator, preventing the opposing team from selecting those operators.
+This operator selection process adds an extra layer of strategy to the
+game. The rounds are fast-paced, requiring meticulous planning and quick
+reflexes.
 
-Operators wield firearms with specific recoil patterns, mirroring their real-world counterparts. Some operators share the same primary weapons, resulting in shared recoil patterns. These patterns dictate how a weapon behaves when fired continuously and influence aim deviation. Mastering these recoil patterns enables players to maintain accuracy during intense firefights.
+Operators wield firearms with specific recoil patterns, mirroring their
+real-world counterparts. Some operators share the same primary weapons,
+resulting in shared recoil patterns. These patterns dictate how a weapon
+behaves when fired continuously and influence aim deviation. Mastering
+these recoil patterns enables players to maintain accuracy during
+intense firefights.
 
-Rainbow Six Siege demands players' full attention, making sound an integral part of the game. With over 800 unique audio cues to discern, sound cues play a crucial role in gameplay. Additionally, numerous environmental objects offer tactical advantages, requiring players to monitor various angles for opponents. Players can also customize their weapon sights/scopes, further affecting their aiming mechanics. Memorizing maps, room layouts, and operator abilities adds another layer of strategic depth to the game.
+Rainbow Six Siege demands players' full attention, making sound an
+integral part of the game. With over 800 unique audio cues to discern,
+sound cues play a crucial role in gameplay. Additionally, numerous
+environmental objects offer tactical advantages, requiring players to
+monitor various angles for opponents. Players can also customize their
+weapon sights/scopes, further affecting their aiming mechanics.
+Memorizing maps, room layouts, and operator abilities adds another layer
+of strategic depth to the game.
 
-Incorporating principles from cognitive load theory, game developers recognize the importance of working memory limitations in instructional design. This theory aligns with Miller's Law, which suggests that people can hold around 7 (plus or minus 2) items in their working memory. Fitt's Law, which states that the time to acquire a target depends on its size and distance, also informs game design decisions.
+Incorporating principles from cognitive load theory, game developers
+recognize the importance of working memory limitations in instructional
+design. This theory aligns with Miller's Law, which suggests that people
+can hold around 7 (plus or minus 2) items in their working memory.
+Fitt's Law, which states that the time to acquire a target depends on
+its size and distance, also informs game design decisions.
 
-In the context of Rainbow Six Siege, weapons with wider recoil spreads demand more attention and control, aligning with the concept of allocating attentional resources in-game. Game development studios employ seasoned UX/UI researchers to enhance game play by considering cognitive limitations and abilities, making Rainbow Six Siege a strategically engaging and immersive gaming experience.
+In the context of Rainbow Six Siege, weapons with wider recoil spreads
+demand more attention and control, aligning with the concept of
+allocating attentional resources in-game. Game development studios
+employ seasoned UX/UI researchers to enhance game play by considering
+cognitive limitations and abilities, making Rainbow Six Siege a
+strategically engaging and immersive gaming experience.
 
-Research Question: Does higher levels of cognitive strain due to larger spread in recoil patterns (of weapons for operators), influence or correlate with Pick vs. Ban Rates of operators?
+Research Question: Does higher levels of cognitive strain due to larger
+spread in recoil patterns (of weapons for operators), influence or
+correlate with Pick vs. Ban Rates of operators?
 
 # Setup
 
-```{r}
+```{r results='hide'}
 # Dependencies
 library(tidyverse)
 library(ggrepel)
@@ -41,12 +78,19 @@ library(hexbin)
 gs4_auth()
 # googlesheets4::gs4_auth(force = TRUE)
 ```
-
-## Data set
+# Methods
+## Data Source #1
 
 Rvesting the data set:
 
-This data set consists of a table of all weapons used in the game and provides statistics; such as, type of gun, firing rate, and the operator that uses it. The original creators of the game and the publishing company, Ubisoft, are overall the generators for the data I am using. The first data source, IGN, provides information about weapons and equipment in Rainbow Six Siege. IGN is a popular gaming and entertainment website, and they compiled this data to provide a resource for gamers interested in the game's details.
+This data set consists of a table of all weapons used in the game and
+provides statistics; such as, type of gun, firing rate, and the operator
+that uses it. The original creators of the game and the publishing
+company, Ubisoft, are overall the generators for the data I am using.
+The first data source, IGN, provides information about weapons and
+equipment in Rainbow Six Siege. IGN is a popular gaming and
+entertainment website, and they compiled this data to provide a resource
+for gamers interested in the game's details.
 
 ```{r}
 url <- "https://www.ign.com/wikis/rainbow-six-siege/Weapons_and_Equipment"
@@ -65,7 +109,6 @@ skim(table_data)
 
 There is one column missing a name
 
-
 Remove/Replace NA in column names:
 
 ```{r}
@@ -78,19 +121,22 @@ Remove/Replace NA in column names:
 
 colnames(my_table)[11] <- "Range"
 ```
+
 Next I need to rename "Name" column to be more descriptive:
+
 ```{r}
 my_table<- my_table %>%
   rename(Weapon = Name)
 
 ```
 
-```{r}
+```{r include=FALSE}
 # View the result
 print(my_table)
 ```
 
-The next packaging issue is the concatenated "overlapping" of operators per each weapon. I need to split these.
+The next packaging issue is the concatenated "overlapping" of operators
+per each weapon. I need to split these. In my first attem
 
 ```{r}
 # # Splitting the operator column based on uppercase letters
@@ -100,12 +146,11 @@ The next packaging issue is the concatenated "overlapping" of operators per each
 #   mutate(Operator = str_extract_all(Operator, "[A-Z][a-z]+")) %>%
 #   # Unnest the list column to separate rows
 #   unnest(Operator)
-# 
-# # View the result
+#
 # print(my_table_split)
 # view(my_table_split)
 # 
-# ## There's a major issue missing IQ LOL because its two uppercase letters
+#  There's a major issue missing IQ because its two uppercase letters
 ## Jager has a special char rename. 
 my_table<- my_table %>%
   mutate(Operator = ifelse(Operator == "Jäger", "Jager", Operator))
@@ -118,52 +163,48 @@ my_table_split <- my_table %>%
   # Unnest the list column to separate rows
   unnest(Operator)
 
-# View the result
-print(my_table_split)
 
 ```
 
-# Data Source 2
+## Data Source #2
 
-The second main data source, Gameriv, offers pick and ban rates for operators in Rainbow Six
-Siege. Gameriv is a gaming-focused website, and they collected this data to inform the gaming
-community about the popularity and ban rates of operators in the game. (Graphs were collected straight
-from Ubisoft\'s seasonal data roundup.) The exact data was collected from seasonal statistics of
-gameplay from year 7 early few seasons 1.2-3. released March of 2022 and data from the designer\'s
-notes officially was published on Ubisoft\'s website 4/5/2022. The Gameriv review article was published
-September 12, 2022.
+The second main data source, Gameriv, offers pick and ban rates for
+operators in Rainbow Six Siege. Gameriv is a gaming-focused website, and
+they collected this data to inform the gaming community about the
+popularity and ban rates of operators in the game. (Graphs were
+collected straight from Ubisoft's seasonal data roundup.) The exact data
+was collected from seasonal statistics of gameplay from year 7 early few
+seasons 1.2-3. released March of 2022 and data from the designer's notes
+officially was published on Ubisoft's website 4/5/2022. The Gameriv
+review article was published September 12, 2022.
 
-From Source:
-“Credit: All the graphs below have been collected from Ubisoft and contain data recorded from PCRanked Platinum and above.” This is helpful to note that the data comes from players using only a personal computer in high level ranked games, as opposed to console players being included. 
+From Source: "Credit: All the graphs below have been collected from
+Ubisoft and contain data recorded from PCRanked Platinum and above."
+This is helpful to note that the data comes from players using only a
+personal computer in high level ranked games, as opposed to console
+players being included.
 
-These ranks are also important to note. Overall, the player base that the data stems from is ranked by these ranks: (worst to best).
+These ranks are also important to note. Overall, the player base that
+the data stems from is ranked by these ranks: (worst to best).
 
-• Copper V, IV, III, II, I 
-• Bronze V, IV, III, II, I 
-• Silver V, IV, III, II, I
-• Gold V, IV, III, II, I
-• Platinum V, IV, III, II, I 
-• Emerald V, IV, III, II, I 
-• Diamond V, IV, III, II, I 
-• Champions
+• Copper V, IV, III, II, I • Bronze V, IV, III, II, I • Silver V, IV,
+III, II, I • Gold V, IV, III, II, I • Platinum V, IV, III, II, I •
+Emerald V, IV, III, II, I • Diamond V, IV, III, II, I • Champions
 
-Data comes from the upper echelon of skilled players. It is the top half of all ranked players that provide this data. It is a set of extremely knowledgeable and experienced players.
+Data comes from the upper echelon of skilled players. It is the top half
+of all ranked players that provide this data. It is a set of extremely
+knowledgeable and experienced players.
 
+High pick, average pick, and low pick rates have been determined by a
+metric as follows:
 
-High pick, average pick, and low pick rates have been determined by a metric as follows: 
+Attackers: High Pick Rate (Presence \> 40%) Average Pick Rate (15% \<
+Presence \< 40%) Low Pick Rate (Presence \< 15%)
 
-Attackers:
-High Pick Rate (Presence > 40%)
-Average Pick Rate (15% < Presence < 40%)
-Low Pick Rate (Presence < 15%)
+Defenders: High Pick Rate (Presence \> 30%) Average Pick Rate (18% \<
+Presence \< 30%) Low Pick Rate (Presence \< 10%)
 
-Defenders: 
-High Pick Rate (Presence > 30%)
-Average Pick Rate (18% < Presence < 30%)
-Low Pick Rate (Presence < 10%)
-
-
-## Add pick rate column
+### Add pick rate column
 
 ```{r}
 
@@ -185,6 +226,7 @@ my_table_long <- my_table_split %>%
 summary(my_table_long)
 			
 ```
+
 ```{r}
 # Filter for High Pick Rate weapons
 high_pick_rate_weapons <- my_table_long %>% filter(`PickRate` == 'High Pick Rate')
@@ -198,7 +240,6 @@ ggplot(high_pick_rate_weapons, aes(x = Weapon)) +
        y = "Count") +
   theme_minimal()
 ```
-
 
 ```{r}
 # Filter data for 'High Pick Rate'
@@ -227,21 +268,33 @@ high_pick_data <- my_table_long[my_table_long$`PickRate` == "High Pick Rate", ]
 
 ```
 
-# Data Source #3 
-		
+## Data Source #3
+
 ### Recoil statistics
-These statistics come from previous analysis here: "https://medium.com/@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688"
 
-When using an automatic-firing weapon, looking at the 4th successive bullets distance from the center at start of firing, they measured how high (y) and how far to the side (x) it reached, in pixels.
+These statistics come from previous analysis here:
+"[https://medium.com/\@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688](https://medium.com/@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688){.uri}"
+This source provides a score for each weapons recoil statistic. The purpose of this data was to provide insights over all variables effecting what makes an operator strong or weak in game play. 
+They found this score by focusing on automatic-firing weapons, and looking at the 4th successive
+bullets distance from the center at start of firing, they measured how
+high (y) and how far to the side (x) it reached, in pixels.
 
-Vertical and Horizontal scores were calculated and summed for each weapon and recorded on a scale of the smallest recoil gets one point, the bigger gets closer to zero points and into the negative points for the worst. Horizontal movement gets a weight of 0.9 for and 0.6 for vertical (1.5x both weights then averaged) to reach the overall score for recoil.
-This means in total a gun can get about point total for recoil.
+Vertical and Horizontal scores were calculated and summed for each
+weapon and recorded on a scale of the smallest recoil gets one point,
+the bigger gets closer to zero points and into the negative points for
+the worst. Horizontal movement gets a weight of 0.9 for and 0.6 for
+vertical (1.5x both weights then averaged) to reach the overall score
+for recoil. This means in total a gun can get about point total for
+recoil.
 
-It is important to note that the original analyst used each weapon with the same "equipments" to control consistency.
-		
-		I want to extract column "L" containing the recoil scores, as well as "B" for the associated weapon.
-		There are two separate sheets one is attacker and one is for defenders so I will repeat the extraction for both sheets. 
-```{r}
+It is important to note that the original analyst used each weapon with
+the same "equipments" to control consistency.
+
+I want to extract column "L" containing the recoil scores, as well as "B" for the associated weapon.
+There are two separate sheets one is attacker and one is for defenders so I will repeat the extraction for both sheets. 
+
+
+```{r results='hide'}
 SCOAR<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
 
 SCOAR_ARECOIL <-googlesheets4::read_sheet(SCOAR, range = "attacker guns!L:L")
@@ -255,7 +308,8 @@ atrecoil_data <- cbind(SCOAR_AWEAPON, SCOAR_ARECOIL)
 print(atrecoil_data)
 
 ```
-```{r}
+
+```{r results='hide'}
 SCOAR<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
 
 SCOAR_DRECOIL <-googlesheets4::read_sheet(SCOAR, range = "defender guns!L:L")
@@ -269,22 +323,33 @@ defrecoil_data <- cbind(SCOAR_DWEAPON, SCOAR_DRECOIL)
 print(defrecoil_data)
 
 ```
-		
-		
+
 ```{r}
 
 combo_recoil <- rbind(defrecoil_data, atrecoil_data)
 combo_recoil<- unique(combo_recoil)
 ## interesting 71 obs... still some missing, 
 ```
-Now I need to assign recoil to weapons in my dataset. But first... what are the missing guns besides the handguns? is that fit for my research still? 
+After aquiring these scores,
+I need to assign recoil statistics to each of the weapons in my dataset. But upon inspection there
+are the missing guns besides the handguns? Is that fit for my research
+still?
 
-There were slight discrepancies in spelling for each weapon, but besides that, some of the weapon data was not fit for my research question.
+There were slight discrepancies in spelling for each weapon, but besides
+that, some of the weapon data was not fit for my research question.
 
-Handguns and machine pistols in this dataset are used as "Secondary" weapons in the game. This is not what I need to look at because that is not the main weapon for the operators. Marksman Rifles have relatively little to NO kick at all between shots due to the fact that they function as single-fire weapons. So in this case I want to filter them out because they do not drift from target because they're not automatic weapons. 
+Handguns and machine pistols in this dataset are used as "Secondary"
+weapons in the game. This is not what I need to look at because that is
+not the main weapon for the operators. Marksman Rifles have relatively
+little to NO kick at all between shots due to the fact that they
+function as single-fire weapons. So in this case I want to filter them
+out because they do not drift from target because they're not automatic
+weapons.
 
-Shotguns have massive variability again in the functionality. These weapons fire single "rounds" that have a spread of bullets in a blob. 
-Not a weapon that calls for countering recoil in the same manner as auto-fire weapons, so we will filter these out as well. 
+Shotguns have massive variability again in the functionality. These
+weapons fire single "rounds" that have a spread of bullets in a blob.
+Not a weapon that calls for countering recoil in the same manner as
+auto-fire weapons, so we will filter these out as well.
 
 ```{r}
 # Filtering the table
@@ -307,13 +372,21 @@ number_of_unique_weapons <- length(unique_weapons)
 print(number_of_unique_weapons)
 
 ```
-Now that the dimensions match from the combined recoil scores data frame and the weapons in the original data frame, and the "unfit" weapons are removed I merged the two data frames
+
+Now that the dimensions match from the combined recoil scores data frame
+and the weapons in the original data frame, and the "unfit" weapons are
+removed I merged the two data frames
+
 ```{r}
 fulldf<- merge(filtered_table, combo_recoil, by = "Weapon", all.x = TRUE)
 
 #print(fulldf)
 ```
-# Plot
+
+# Results
+I want a clar visual that conveys how many weapons are associated with high pick rate operators as compared to the cooreasponding recoil score of the weapon.
+I started by trying to look at frequency:
+
 ```{r}
 ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
   geom_point(aes(color = Recoil), size = 3) + 
@@ -325,7 +398,8 @@ ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
   scale_color_gradient(low = "blue", high = "red")
 
 ```
-	
+The temperature scale on the right as we will call it, is slightly confusing. "High recoil" interpreted in the data is actually optimal, but the phrase alone suggests "more" or "higher" recoil. So this is not the best representation of results
+
 ```{r}
 
 ggplot(fulldf, aes(x=PickRate, y=Recoil)) + 
@@ -337,6 +411,17 @@ ggplot(fulldf, aes(x=PickRate, y=Recoil)) +
        fill = "Frequency") +
   theme_minimal()
 
+```
+```{r}
+high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
+
+ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + # Makes the plot horizontal for better readability with weapon names
+  labs(title = "Recoil of High Pick Rate Weapons",
+       x = "Weapon",
+       y = "Recoil Value") +
+  theme_minimal()
 ```
 ```{r}
 # Discretize the Recoil column
@@ -361,7 +446,9 @@ ggplot(heatmap_data, aes(x = PickRate, y = RecoilRange, fill = Count)) +
   theme_minimal()
 
 ```
+
 Stats time :P
+
 ```{r}
 # Ensure PickRate is an ordered factor
 fulldf$PickRate <- factor(fulldf$PickRate, levels = c("Low Pick Rate", "Average Pick Rate", "High Pick Rate"), ordered = TRUE)
@@ -373,29 +460,44 @@ fulldf$PickRateNumeric <- as.numeric(fulldf$PickRate)
 cor.test(~ Recoil + PickRateNumeric, data = fulldf, method = "kendall") 
 
 ```
-Since my p-value is much greater than 0.05, I do not have evidence to reject the null hypothesis. In other words, there is no statistically significant correlation between Recoil and PickRate.
 
-This means changes in recoil scores do not consistently relate to changes in the ordinal pick rate categories in a way that increases or decreases together.
+Since my p-value is much greater than 0.05, I do not have evidence to
+reject the null hypothesis. In other words, there is no statistically
+significant correlation between Recoil and PickRate.
 
-However; Kendall's Tau requires that both variables be ordinal or continuous. In my dataframe, Recoil is continuous, and PickRateNumeric isordinal encoding of PickRate, with "Low Pick Rate" as 1, "Average Pick Rate" as 2, and "High Pick Rate" as 3.
+This means changes in recoil scores do not consistently relate to
+changes in the ordinal pick rate categories in a way that increases or
+decreases together.
 
-```{r}
-high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
+However; Kendall's Tau requires that both variables be ordinal or
+continuous. In my dataframe, Recoil is continuous, and PickRateNumeric
+isordinal encoding of PickRate, with "Low Pick Rate" as 1, "Average Pick
+Rate" as 2, and "High Pick Rate" as 3.
 
-ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  coord_flip() + # Makes the plot horizontal for better readability with weapon names
-  labs(title = "Recoil of High Pick Rate Weapons",
-       x = "Weapon",
-       y = "Recoil Value") +
-  theme_minimal()
-```
+
 
 # Limitations
-If I had quantitative statistics for the Pick Rate column that may be helpful to see a significance. The Pick Rate column is just 3 levels of category which is not descriptive enough in this case to really pull any trend out. If I had the "raw data" that ubisoft does not formally release then I could see exact percentages for pick ratios of each operater per x amount of rounds in x amount of matches. 
 
-Similarly, the scores for recoil are not nearly as comprehensive as they are on Ubisoft's end. additionally, there are many additional attachments that aid in dampening recoil, these statistics are not accounted for in my data.
+If I had quantitative statistics for the Pick Rate column that may be
+helpful to see a significance. The Pick Rate column is just 3 levels of
+category which is not descriptive enough in this case to really pull any
+trend out. If I had the "raw data" that ubisoft does not formally
+release then I could see exact percentages for pick ratios of each
+operater per x amount of rounds in x amount of matches.
 
-Additionally for a next direction I should explore "Ban" Rates instead of pick rates to see any correlation between highly-banned operators and their weapon's  recoil. 
+Similarly, the scores for recoil are not nearly as comprehensive as they
+are on Ubisoft's end. additionally, there are many additional
+attachments that aid in dampening recoil, these statistics are not
+accounted for in my data.
 
-This kind of exploration would probably benefit from factor analysis as well as mixed effects models, however my data is unfit for these purposes. Specifically, my features are not continuous and also not numeric. Multicollinearity: High correlations among some of these variables are likely, given that weapon attributes are often designed to balance each other (e.g., high damage might be balanced by high recoil). This could make it difficult to separate out distinct factors.
+Additionally for a next direction I should explore "Ban" Rates instead
+of pick rates to see any correlation between highly-banned operators and
+their weapon's recoil.
+
+This kind of exploration would probably benefit from factor analysis as
+well as mixed effects models, however my data is unfit for these
+purposes. Specifically, my features are not continuous and also not
+numeric. Multicollinearity: High correlations among some of these
+variables are likely, given that weapon attributes are often designed to
+balance each other (e.g., high damage might be balanced by high recoil).
+This could make it difficult to separate out distinct factors.
