@@ -7,3 +7,15 @@ It is public:
 https://docs.google.com/spreadsheets/d/1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts/edit?usp=sharing
 
 As you navigate to browser and allow tidyverse access to gmail, after you allow you should be able to navigate back to the Rmd and run again; then in console you should see a small message asking to authenticate again (1) or use the email you previous allowed (2), once answering (2) in console the rest of the script will run/knit. 
+
+<!-- DH general comments
+
+- I appreciate this readme with setup instructions, and the project organization.  Putting this readme in its own folder is unnecessary, though.  If it's in the top folder, Github will automatically display it when someone views the repo. 
+
+- Possibly the instructions on googlesheets4 authentication could have been more perspicuous. 
+
+- Usually, the `R` folder is used for utility functions and `scripts` is for the analysis pipeline.  You've flipped that here.  
+
+- Put the `Rproj` file in the top folder
+
+--> 

@@ -9,12 +9,15 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
+## DH: I think this is only necessary if you're knitting to slides? 
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
 # Rainbow Six Siege Exploratory Data Analysis
 
 ## Introduction
+
+<!-- DH: Nice job including this introduction to the project -->
 
 Rainbow Six Siege is a first-person shooter video game with two teams of
 five players each. One team acts as the "attackers," striving to
@@ -92,12 +95,18 @@ equipment in Rainbow Six Siege. IGN is a popular gaming and
 entertainment website, and they compiled this data to provide a resource
 for gamers interested in the game's details.
 
+<!-- DH: Two things about "simple" scraping: 1. The script will fail (including knitting) if you try to run it on a machine that's not online.  2. You have to hit the scraped server every time the script is run.  This isn't a big deal in this particular case, but might be if you're scraping many pages or calling an API.  
+
+To avoid these problems, download the raw data (HTML file) locally, and actually scrape only if the raw data don't exist. -->
+
 ```{r}
 url <- "https://www.ign.com/wikis/rainbow-six-siege/Weapons_and_Equipment"
 page <- read_html(url)
 table_data <- page %>%
+  ## DH: Unless old code like this is genuinely valuable, clean it up
 #   html_nodes("section.jsx-2191675443.jsx-380427680.jsx-28683165.wiki-section.wiki-html table") %>%
   html_table()
+## DH: use a more descriptive name
 my_table <- table_data[[1]]
 ```
 
@@ -119,12 +128,14 @@ Remove/Replace NA in column names:
 # [7] "ROF"                  "Magazine"             "Suppressor"          
 # [10] "ACOG"                 ""             
 
+ ## DH: violates immutability
 colnames(my_table)[11] <- "Range"
 ```
 
 Next I need to rename "Name" column to be more descriptive:
 
 ```{r}
+## DH: violates immutability; unnecessary pipe
 my_table<- my_table %>%
   rename(Weapon = Name)
 
@@ -139,6 +150,7 @@ The next packaging issue is the concatenated "overlapping" of operators
 per each weapon. I need to split these. In my first attem
 
 ```{r}
+## DH: This leftover(?) code is confusing: Why is it here, but unused? 
 # # Splitting the operator column based on uppercase letters
 # # Split the Operator column and unnest the result
 # my_table_split <- my_table %>%
@@ -152,7 +164,8 @@ per each weapon. I need to split these. In my first attem
 # 
 #  There's a major issue missing IQ because its two uppercase letters
 ## Jager has a special char rename. 
-my_table<- my_table %>%
+## DH: violates immutability; unnecessary pipe; spacing
+my_table <- my_table %>%
   mutate(Operator = ifelse(Operator == "Jäger", "Jager", Operator))
 # Splitting the operator column based on uppercase letters
 # Split the Operator column and unnest the result
@@ -187,6 +200,7 @@ players being included.
 These ranks are also important to note. Overall, the player base that
 the data stems from is ranked by these ranks: (worst to best).
 
+<!-- DH: Make this a Markdown list -->
 • Copper V, IV, III, II, I • Bronze V, IV, III, II, I • Silver V, IV,
 III, II, I • Gold V, IV, III, II, I • Platinum V, IV, III, II, I •
 Emerald V, IV, III, II, I • Diamond V, IV, III, II, I • Champions
@@ -229,6 +243,7 @@ summary(my_table_long)
 
 ```{r}
 # Filter for High Pick Rate weapons
+## DH: unnecessary pipe; pipe should be at end of line
 high_pick_rate_weapons <- my_table_long %>% filter(`PickRate` == 'High Pick Rate')
 
 # Create the ggplot
@@ -241,10 +256,15 @@ ggplot(high_pick_rate_weapons, aes(x = Weapon)) +
   theme_minimal()
 ```
 
+<!-- DH: I'm a little uncertain what this plot is showing us? --> 
+
 ```{r}
 # Filter data for 'High Pick Rate'
+## DH: Keep your idiom (base vs. tidyverse) consistent
+## DH: Why do we have both `high_pick_rate_weapons` and `high_pick_data`? 
 high_pick_data <- my_table_long[my_table_long$`PickRate` == "High Pick Rate", ]
 
+## DH: What are these plots, why aren't we looking at them, and why did we construct `high_pick_data`? 
 # # Plot
 # ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
 #   geom_bar() +
@@ -295,8 +315,11 @@ There are two separate sheets one is attacker and one is for defenders so I will
 
 
 ```{r results='hide'}
+## DH: naming convention for vars is lowercase
+## DH: meaningful variable name: intentional missspelling of "score" or ???
 SCOAR<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
 
+## DH: same issues as scraping web pages above
 SCOAR_ARECOIL <-googlesheets4::read_sheet(SCOAR, range = "attacker guns!L:L")
 
 SCOAR_AWEAPON <- read_sheet(SCOAR, range = "attacker guns!B:B")
@@ -310,6 +333,7 @@ print(atrecoil_data)
 ```
 
 ```{r results='hide'}
+## DH: violates immutability/confusing because this var already exists and has this value
 SCOAR<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
 
 SCOAR_DRECOIL <-googlesheets4::read_sheet(SCOAR, range = "defender guns!L:L")
@@ -327,12 +351,14 @@ print(defrecoil_data)
 ```{r}
 
 combo_recoil <- rbind(defrecoil_data, atrecoil_data)
+## DH: violates immutability
 combo_recoil<- unique(combo_recoil)
+## DH: after running through `unique()` I only have 51 rows? 
 ## interesting 71 obs... still some missing, 
 ```
 After aquiring these scores,
 I need to assign recoil statistics to each of the weapons in my dataset. But upon inspection there
-are the missing guns besides the handguns? Is that fit for my research
+are the missing guns besides the handguns? <!-- DH: Previous sentence garbled somehow? --> Is that fit for my research
 still?
 
 There were slight discrepancies in spelling for each weapon, but besides
@@ -362,6 +388,7 @@ filtered_table <- my_table_long %>%
     !(Type == "Machine Pistol" & Weapon != "SPSMG9")
   )
 
+## DH: Consider using `n_distinct()` and just printing it out without storing in a variable
 # Get the unique weapons from the Weapon column after filtering
 unique_weapons <- unique(filtered_table$Weapon)
 
@@ -378,6 +405,7 @@ and the weapons in the original data frame, and the "unfit" weapons are
 removed I merged the two data frames
 
 ```{r}
+## DH: long line
 fulldf<- merge(filtered_table, combo_recoil, by = "Weapon", all.x = TRUE)
 
 #print(fulldf)
@@ -398,6 +426,7 @@ ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
   scale_color_gradient(low = "blue", high = "red")
 
 ```
+
 The temperature scale on the right as we will call it, is slightly confusing. "High recoil" interpreted in the data is actually optimal, but the phrase alone suggests "more" or "higher" recoil. So this is not the best representation of results
 
 ```{r}
@@ -412,6 +441,26 @@ ggplot(fulldf, aes(x=PickRate, y=Recoil)) +
   theme_minimal()
 
 ```
+<!-- DH: This is a little better, but still hard to parse. I think the following is better still. --> 
+
+```{r}
+fulldf |> 
+  count(PickRate, Recoil) |> 
+  mutate(Recoil = as.factor(Recoil)) |> 
+  complete(PickRate, Recoil, fill = list(n = 0)) |> 
+  ggplot(aes(x = PickRate, y = Recoil, fill = n, label = n)) +
+  geom_raster() +
+  geom_text(color = 'white') +
+  labs(title = "Weapon Pick Rate vs Recoil",
+       x = "Pick Rate",
+       y = "Recoil") +
+  theme_minimal() +
+  scale_fill_viridis()
+```
+
+<!-- DH: Just realized PickRate is out of order in the plots.  Need to coerce it to a factor and set the correct order manually. -->
+
+
 ```{r}
 high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
 
@@ -424,6 +473,7 @@ ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
   theme_minimal()
 ```
 ```{r}
+## DH: Violations of immutability and long lines in this chunk
 # Discretize the Recoil column
 fulldf$RecoilRange <- cut(fulldf$Recoil, 
                           breaks=c(-Inf, -0.5, 0, 0.5, Inf), 
@@ -450,6 +500,7 @@ ggplot(heatmap_data, aes(x = PickRate, y = RecoilRange, fill = Count)) +
 Stats time :P
 
 ```{r}
+## DH: violates immutability
 # Ensure PickRate is an ordered factor
 fulldf$PickRate <- factor(fulldf$PickRate, levels = c("Low Pick Rate", "Average Pick Rate", "High Pick Rate"), ordered = TRUE)
 
@@ -467,13 +518,12 @@ significant correlation between Recoil and PickRate.
 
 This means changes in recoil scores do not consistently relate to
 changes in the ordinal pick rate categories in a way that increases or
-decreases together.
+decreases together. <!-- DH: Remember that you can't accept the null in a Fisherian hypothesis test, and need a power analysis to do a Neyman-Pearson test. --> 
 
 However; Kendall's Tau requires that both variables be ordinal or
 continuous. In my dataframe, Recoil is continuous, and PickRateNumeric
 isordinal encoding of PickRate, with "Low Pick Rate" as 1, "Average Pick
-Rate" as 2, and "High Pick Rate" as 3.
-
+Rate" as 2, and "High Pick Rate" as 3. <!-- DH: "However" indicates that you're going to argue Kendall's tau isn't actually appropriate in this case, or something like that.  What's that conclusion here? -->
 
 
 # Limitations
@@ -481,9 +531,9 @@ Rate" as 2, and "High Pick Rate" as 3.
 If I had quantitative statistics for the Pick Rate column that may be
 helpful to see a significance. The Pick Rate column is just 3 levels of
 category which is not descriptive enough in this case to really pull any
-trend out. If I had the "raw data" that ubisoft does not formally
+trend out. If I had the "raw data" that Ubisoft does not formally
 release then I could see exact percentages for pick ratios of each
-operater per x amount of rounds in x amount of matches.
+operator per x amount of rounds in x amount of matches.
 
 Similarly, the scores for recoil are not nearly as comprehensive as they
 are on Ubisoft's end. additionally, there are many additional
