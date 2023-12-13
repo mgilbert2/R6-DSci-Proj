@@ -388,11 +388,20 @@ high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
 
 ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
   geom_bar(stat = "identity", fill = "steelblue") +
-  coord_flip() + # Makes the plot horizontal for better readability with weapon names
+  coord_flip() + # Makes the plot horizontal
   labs(title = "Recoil of High Pick Rate Weapons",
        x = "Weapon",
        y = "Recoil Value") +
-  theme_minimal()
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5), # Center the title
+    axis.text.x = element_text(angle = 45, hjust = 1), # Angle the x-axis labels for readability
+    panel.background = element_rect(fill = "white"), # White background
+    panel.grid.major = element_line(linewidth = 0.5, linetype = 'solid', colour = "gray"), # Major grid lines
+    panel.grid.minor = element_blank(), # No minor grid lines
+    legend.position = "none" # Remove legend if not needed
+  ) +
+  scale_fill_brewer(palette = "Blues")
 ```
  
 This is a measure of spread that informatively shows a mostly - positive distribution with high-pick weapons recoil scores being positive.
@@ -412,6 +421,35 @@ ggplot(low_pick_df, aes(x = Weapon, y = Recoil)) +
 This is a measure of spread that informatively shows a somewhat - mixed distribution with low-pick weapons recoil scores being mostly skewed around 0 but with more negative values than the high pick rate weapons.
 
 ```{r}
+<<<<<<< Updated upstream:scripts/R6proj.Rmd
+=======
+low_pick_df <- subset(fulldf, PickRate == "Low Pick Rate")
+
+ggplot(low_pick_df, aes(x = Weapon, y = Recoil)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + # Makes the plot horizontal
+  labs(title = "Recoil of Low Pick Rate Weapons",
+       x = "Weapon",
+       y = "Recoil Value") +
+  theme_minimal() +
+  theme(
+    plot.title = element_text(hjust = 0.5), # Center the title
+    axis.text.x = element_text(angle = 45, hjust = 1), 
+    panel.background = element_rect(fill = "white"), 
+    panel.grid.major = element_line(linewidth = 0.5, linetype = 'solid', colour = "gray"),
+    panel.grid.minor = element_blank(), 
+    legend.position = "none" 
+  ) +
+  scale_fill_brewer(palette = "Blues")
+```
+
+
+```{r}
+# Discretize the Recoil column
+fulldf$RecoilRange <- cut(fulldf$Recoil, 
+                          breaks=c(-Inf, -0.5, 0, 0.5, Inf), 
+                          labels=c("Very High Recoil", "High Recoil", "Medium Recoil", "Low Recoil"))
+>>>>>>> Stashed changes:R/R6EDA.Rmd
 # Count the number of weapons in each combination of Pick Rate and Recoil range
 heatmap_data <- as.data.frame(table(fulldf$PickRate, fulldf$RecoilRange))
 colnames(heatmap_data) <- c("PickRate", "RecoilRange", "Count")
