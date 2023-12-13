@@ -406,23 +406,8 @@ ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
  
 This is a measure of spread that informatively shows a mostly - positive distribution with high-pick weapons recoil scores being positive.
 
-```{r}
-low_pick_df <- subset(fulldf, PickRate == "Low Pick Rate")
-
-ggplot(low_pick_df, aes(x = Weapon, y = Recoil)) +
-  geom_bar(stat = "identity", fill = "steelblue") +
-  coord_flip() + 
-  labs(title = "Recoil of Low Pick Rate Weapons",
-       x = "Weapon",
-       y = "Recoil Value") +
-  theme_minimal()
-```
-
-This is a measure of spread that informatively shows a somewhat - mixed distribution with low-pick weapons recoil scores being mostly skewed around 0 but with more negative values than the high pick rate weapons.
 
 ```{r}
-<<<<<<< Updated upstream:scripts/R6proj.Rmd
-=======
 low_pick_df <- subset(fulldf, PickRate == "Low Pick Rate")
 
 ggplot(low_pick_df, aes(x = Weapon, y = Recoil)) +
@@ -442,14 +427,9 @@ ggplot(low_pick_df, aes(x = Weapon, y = Recoil)) +
   ) +
   scale_fill_brewer(palette = "Blues")
 ```
-
+This is a measure of spread that informatively shows a somewhat - mixed distribution with low-pick weapons recoil scores being mostly skewed around 0 but with more negative values than the high pick rate weapons.
 
 ```{r}
-# Discretize the Recoil column
-fulldf$RecoilRange <- cut(fulldf$Recoil, 
-                          breaks=c(-Inf, -0.5, 0, 0.5, Inf), 
-                          labels=c("Very High Recoil", "High Recoil", "Medium Recoil", "Low Recoil"))
->>>>>>> Stashed changes:R/R6EDA.Rmd
 # Count the number of weapons in each combination of Pick Rate and Recoil range
 heatmap_data <- as.data.frame(table(fulldf$PickRate, fulldf$RecoilRange))
 colnames(heatmap_data) <- c("PickRate", "RecoilRange", "Count")
