@@ -78,7 +78,9 @@ library(hexbin)
 gs4_auth()
 # googlesheets4::gs4_auth(force = TRUE)
 ```
+
 # Methods
+
 ## Data Source #1
 
 Rvesting the data set:
@@ -96,9 +98,8 @@ for gamers interested in the game's details.
 url <- "https://www.ign.com/wikis/rainbow-six-siege/Weapons_and_Equipment"
 page <- read_html(url)
 table_data <- page %>%
-#   html_nodes("section.jsx-2191675443.jsx-380427680.jsx-28683165.wiki-section.wiki-html table") %>%
   html_table()
-my_table <- table_data[[1]]
+rawweapons_table <- table_data[[1]]
 ```
 
 # Check NA's and Packaging
@@ -112,57 +113,44 @@ There is one column missing a name
 Remove/Replace NA in column names:
 
 ```{r}
- View(my_table)
- colnames(my_table)
+ View(rawweapons_table)
+ colnames(rawweapons_table)
 # [1] "Name"                 "Type"                 "Operator"            
 # [4] "Team"                 "CTU"                  "Damage (Suppressed*)"
 # [7] "ROF"                  "Magazine"             "Suppressor"          
 # [10] "ACOG"                 ""             
+weapons_table <- rawweapons_table
 
-colnames(my_table)[11] <- "Range"
+colnames(weapons_table)[11] <- "Range"
+
 ```
 
 Next I need to rename "Name" column to be more descriptive:
 
 ```{r}
-my_table<- my_table %>%
+weapons_table1<- weapons_table %>%
   rename(Weapon = Name)
-
 ```
 
 ```{r include=FALSE}
 # View the result
-print(my_table)
+print(weapons_table1)
 ```
 
 The next packaging issue is the concatenated "overlapping" of operators
 per each weapon. I need to split these. In my first attem
 
 ```{r}
-# # Splitting the operator column based on uppercase letters
-# # Split the Operator column and unnest the result
-# my_table_split <- my_table %>%
-#   # Use str_extract_all to find all uppercase followed by lowercase strings (operators' names)
-#   mutate(Operator = str_extract_all(Operator, "[A-Z][a-z]+")) %>%
-#   # Unnest the list column to separate rows
-#   unnest(Operator)
-#
-# print(my_table_split)
-# view(my_table_split)
-# 
-#  There's a major issue missing IQ because its two uppercase letters
-## Jager has a special char rename. 
-my_table<- my_table %>%
+weapons_table1 <- weapons_table1 %>%
   mutate(Operator = ifelse(Operator == "Jäger", "Jager", Operator))
 # Splitting the operator column based on uppercase letters
 # Split the Operator column and unnest the result
-my_table_split <- my_table %>%
+weapons_table1_split <- weapons_table1 %>%
   # Use str_extract_all to find all uppercase followed by lowercase strings (operators' names) 
   # or all uppercase strings with 2 or more characters
   mutate(Operator = str_extract_all(Operator, "([A-Z][a-z]+|[A-Z]{2,})")) %>%
   # Unnest the list column to separate rows
   unnest(Operator)
-
 
 ```
 
@@ -187,16 +175,23 @@ players being included.
 These ranks are also important to note. Overall, the player base that
 the data stems from is ranked by these ranks: (worst to best).
 
-• Copper V, IV, III, II, I • Bronze V, IV, III, II, I • Silver V, IV,
-III, II, I • Gold V, IV, III, II, I • Platinum V, IV, III, II, I •
-Emerald V, IV, III, II, I • Diamond V, IV, III, II, I • Champions
+-   Copper V, IV, III, II, I
+-   Bronze V, IV, III, II, I
+-   Silver V, IV, III, II, I
+-   Gold V, IV, III, II, I
+-   Platinum V, IV, III, II, I
+-   Emerald V, IV, III, II, I
+-   Diamond V, IV, III, II, I
+-   Champions
 
-Data comes from the upper echelon of skilled players. It is the top half
-of all ranked players that provide this data. It is a set of extremely
-knowledgeable and experienced players.
+My data comes from the upper echelon of skilled players. It is the top
+half of all ranked players that provide this data. It is a set of
+extremely knowledgeable and experienced players. This is important due
+to the fact that these sets of players attention is extremely focus
+in-game.
 
 High pick, average pick, and low pick rates have been determined by a
-metric as follows:
+metric as follows from Ubisoft: Percentage per x amount of won games:
 
 Attackers: High Pick Rate (Presence \> 40%) Average Pick Rate (15% \<
 Presence \< 40%) Low Pick Rate (Presence \< 15%)
@@ -212,7 +207,7 @@ high_pick <- c("Finka", "Iana", "Sledge", "Thatcher", "Twitch", "Alibi", "Jager"
 average_pick <- c("Valkyrie", "Thunderbird", "Smoke", "Bandit", "Kaid", "Wamai", "Mozzie", "Azami", "Lesion", "Kapkan", "Aruni", "Oryx", "Jackal", "Ace", "Thermite", "Zofia", "Maverick", "Hibana", "Ash", "Nomad")
 low_pick <- c("Buck", "Osa", "Nokk", "Flores", "Amaru", "IQ", "Zero", "Montagne", "Dokkaebi", "Blackbeard", "Lion", "Blitz", "Kali", "Capitao", "Fuze", "Ying", "Gridlock", "Glaz", "Sens", "Vigil", "Doc", "Ela", "Mira", "Goyo", "Frost", "Thorn", "Maestro", "Pulse", "Rook", "Castle", "Clash", "Warden", "Caveira", "Echo", "Tachanka")
 
-my_table_long <- my_table_split %>%
+weaponstable_long <- weapons_table1_split %>%
   mutate(PickRate = case_when(
     Operator %in% high_pick ~ "High Pick Rate",
     Operator %in% average_pick ~ "Average Pick Rate",
@@ -223,13 +218,13 @@ my_table_long <- my_table_split %>%
 
 ```{r}
 # View the modified table with the new PickRate column
-summary(my_table_long)
+summary(weaponstable_long)
 			
 ```
 
 ```{r}
 # Filter for High Pick Rate weapons
-high_pick_rate_weapons <- my_table_long %>% filter(`PickRate` == 'High Pick Rate')
+high_pick_rate_weapons <- weaponstable_long %>% filter(`PickRate` == 'High Pick Rate')
 
 # Create the ggplot
 ggplot(high_pick_rate_weapons, aes(x = Weapon)) +
@@ -241,32 +236,8 @@ ggplot(high_pick_rate_weapons, aes(x = Weapon)) +
   theme_minimal()
 ```
 
-```{r}
-# Filter data for 'High Pick Rate'
-high_pick_data <- my_table_long[my_table_long$`PickRate` == "High Pick Rate", ]
-
-# # Plot
-# ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
-#   geom_bar() +
-#   labs(title = "High Pick Rate Operators and Their Weapons", 
-#        x = "Operator", 
-#        y = "Count") +
-#   theme_minimal() +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   scale_fill_brewer(palette = "Set3", name = "Weapon"
-
-# 
-# # Plot
-# ggplot(high_pick_data, aes(x = Operator, fill = Weapon)) +
-#   geom_bar() +
-#   labs(title = "High Pick Rate Operators and Their Weapons", 
-#        x = "Operator", 
-#        y = "Count") +
-#   theme_minimal() +
-#   theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
-#   scale_fill_viridis_c(name = "Weapon", discrete = TRUE)
-
-```
+This visual shows all weapons that are used by Highly Picked operators. 
+The count gives a measure of how many high-pick operators use the weapon (Indicates multiple high pick operators use the weapon).
 
 ## Data Source #3
 
@@ -274,10 +245,12 @@ high_pick_data <- my_table_long[my_table_long$`PickRate` == "High Pick Rate", ]
 
 These statistics come from previous analysis here:
 "[https://medium.com/\@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688](https://medium.com/@DogtorFlashbank/which-attacker-guns-in-siege-are-the-best-9dac3e7f7688){.uri}"
-This source provides a score for each weapons recoil statistic. The purpose of this data was to provide insights over all variables effecting what makes an operator strong or weak in game play. 
-They found this score by focusing on automatic-firing weapons, and looking at the 4th successive
-bullets distance from the center at start of firing, they measured how
-high (y) and how far to the side (x) it reached, in pixels.
+This source provides a score for each weapons recoil statistic. The
+purpose of this data was to provide insights over all variables
+effecting what makes an operator strong or weak in game play. They found
+this score by focusing on automatic-firing weapons, and looking at the
+4th successive bullets distance from the center at start of firing, they
+measured how high (y) and how far to the side (x) it reached, in pixels.
 
 Vertical and Horizontal scores were calculated and summed for each
 weapon and recorded on a scale of the smallest recoil gets one point,
@@ -290,19 +263,19 @@ recoil.
 It is important to note that the original analyst used each weapon with
 the same "equipments" to control consistency.
 
-I want to extract column "L" containing the recoil scores, as well as "B" for the associated weapon.
-There are two separate sheets one is attacker and one is for defenders so I will repeat the extraction for both sheets. 
-
+I want to extract column "L" containing the recoil scores, as well as
+"B" for the associated weapon. There are two separate sheets one is
+attacker and one is for defenders so I will repeat the extraction for
+both sheets.
 
 ```{r results='hide'}
-SCOAR<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
+score<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
+score_arecoil <-googlesheets4::read_sheet(score, range = "attacker guns!L:L")
 
-SCOAR_ARECOIL <-googlesheets4::read_sheet(SCOAR, range = "attacker guns!L:L")
-
-SCOAR_AWEAPON <- read_sheet(SCOAR, range = "attacker guns!B:B")
+score_aweapon <- read_sheet(score, range = "attacker guns!B:B")
 
 # Merge the two columns by row number
-atrecoil_data <- cbind(SCOAR_AWEAPON, SCOAR_ARECOIL)
+atrecoil_data <- cbind(score_aweapon, score_arecoil)
 
 # View the merged data frame
 print(atrecoil_data)
@@ -310,14 +283,12 @@ print(atrecoil_data)
 ```
 
 ```{r results='hide'}
-SCOAR<- "1BxIHO_VHKXuNYypY6NRihik98HJN1b9d0_nZCE_l-ts"
+score_drecoil <-googlesheets4::read_sheet(score, range = "defender guns!L:L")
 
-SCOAR_DRECOIL <-googlesheets4::read_sheet(SCOAR, range = "defender guns!L:L")
-
-SCOAR_DWEAPON <- read_sheet(SCOAR, range = "defender guns!B:B")
+score_dweapon <- read_sheet(score, range = "defender guns!B:B")
 
 # Merge the two columns by row number
-defrecoil_data <- cbind(SCOAR_DWEAPON, SCOAR_DRECOIL)
+defrecoil_data <- cbind(score_dweapon, score_drecoil)
 
 # View the merged data frame
 print(defrecoil_data)
@@ -327,13 +298,13 @@ print(defrecoil_data)
 ```{r}
 
 combo_recoil <- rbind(defrecoil_data, atrecoil_data)
-combo_recoil<- unique(combo_recoil)
+combo_recoilunique<- unique(combo_recoil)
 ## interesting 71 obs... still some missing, 
 ```
-After aquiring these scores,
-I need to assign recoil statistics to each of the weapons in my dataset. But upon inspection there
-are the missing guns besides the handguns? Is that fit for my research
-still?
+
+After aquiring these scores, I need to assign recoil statistics to each
+of the weapons in my dataset. But upon inspection there are missing guns
+besides the handguns. Is that fit for my research still?
 
 There were slight discrepancies in spelling for each weapon, but besides
 that, some of the weapon data was not fit for my research question.
@@ -353,7 +324,7 @@ auto-fire weapons, so we will filter these out as well.
 
 ```{r}
 # Filtering the table
-filtered_table <- my_table_long %>% 
+filtered_table <- weaponstable_long %>% 
   filter(
     Weapon != "AR-15.50",
     Type != "Handgun", 
@@ -378,16 +349,23 @@ and the weapons in the original data frame, and the "unfit" weapons are
 removed I merged the two data frames
 
 ```{r}
-fulldf<- merge(filtered_table, combo_recoil, by = "Weapon", all.x = TRUE)
+fulldf<- merge(filtered_table, combo_recoilunique, by = "Weapon", all.x = TRUE)
 
 #print(fulldf)
 ```
 
 # Results
-I want a clar visual that conveys how many weapons are associated with high pick rate operators as compared to the cooreasponding recoil score of the weapon.
-I started by trying to look at frequency:
+
+I want a clear visual that conveys how many weapons are associated with
+high pick rate operators as compared to the cooreasponding recoil score
+of the weapon. I started by trying to look at frequency:
 
 ```{r}
+# Discretize the Recoil column
+fulldf$RecoilRange <- cut(fulldf$Recoil, 
+                          breaks=c(-Inf, -0.5, 0, 0.5, Inf), 
+                          labels=c("Very High Recoil", "High Recoil", "Medium Recoil", "Low Recoil"))
+
 ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
   geom_point(aes(color = Recoil), size = 3) + 
   geom_text_repel(aes(label = Weapon), box.padding = 0.5) +
@@ -398,20 +376,12 @@ ggplot(fulldf, aes(x = PickRate, y = Recoil, label = Weapon)) +
   scale_color_gradient(low = "blue", high = "red")
 
 ```
-The temperature scale on the right as we will call it, is slightly confusing. "High recoil" interpreted in the data is actually optimal, but the phrase alone suggests "more" or "higher" recoil. So this is not the best representation of results
 
-```{r}
+The temperature scale on the right as we will call it, is slightly
+confusing. "High recoil" interpreted in the data is actually optimal,
+but the phrase alone suggests "more" or "higher" recoil. So this is not
+the best representation of results
 
-ggplot(fulldf, aes(x=PickRate, y=Recoil)) + 
-  geom_hex(bins=30) + 
-  scale_fill_viridis_c() +
-  labs(title = "Hexbin plot of Weapon PickRate vs Recoil", 
-       x = "PickRate", 
-       y = "Recoil", 
-       fill = "Frequency") +
-  theme_minimal()
-
-```
 ```{r}
 high_pick_df <- subset(fulldf, PickRate == "High Pick Rate")
 
@@ -423,11 +393,24 @@ ggplot(high_pick_df, aes(x = Weapon, y = Recoil)) +
        y = "Recoil Value") +
   theme_minimal()
 ```
+ 
+This is a measure of spread that informatively shows a mostly - positive distribution with high-pick weapons recoil scores being positive.
+
 ```{r}
-# Discretize the Recoil column
-fulldf$RecoilRange <- cut(fulldf$Recoil, 
-                          breaks=c(-Inf, -0.5, 0, 0.5, Inf), 
-                          labels=c("Very High Recoil", "High Recoil", "Medium Recoil", "Low Recoil"))
+low_pick_df <- subset(fulldf, PickRate == "Low Pick Rate")
+
+ggplot(low_pick_df, aes(x = Weapon, y = Recoil)) +
+  geom_bar(stat = "identity", fill = "steelblue") +
+  coord_flip() + 
+  labs(title = "Recoil of Low Pick Rate Weapons",
+       x = "Weapon",
+       y = "Recoil Value") +
+  theme_minimal()
+```
+
+This is a measure of spread that informatively shows a somewhat - mixed distribution with low-pick weapons recoil scores being mostly skewed around 0 but with more negative values than the high pick rate weapons.
+
+```{r}
 # Count the number of weapons in each combination of Pick Rate and Recoil range
 heatmap_data <- as.data.frame(table(fulldf$PickRate, fulldf$RecoilRange))
 colnames(heatmap_data) <- c("PickRate", "RecoilRange", "Count")
@@ -447,7 +430,7 @@ ggplot(heatmap_data, aes(x = PickRate, y = RecoilRange, fill = Count)) +
 
 ```
 
-Stats time :P
+Statistical Test: 
 
 ```{r}
 # Ensure PickRate is an ordered factor
@@ -461,43 +444,76 @@ cor.test(~ Recoil + PickRateNumeric, data = fulldf, method = "kendall")
 
 ```
 
-Since my p-value is much greater than 0.05, I do not have evidence to
-reject the null hypothesis. In other words, there is no statistically
-significant correlation between Recoil and PickRate.
+In analyzing the relationship between Recoil (a continuous variable) and
+PickRate (an ordinal variable), I employed Kendall's Tau correlation
+test. The choice of Kendall's Tau was due to its ability to assessing
+associations involving at least one ordinal variable.
 
-This means changes in recoil scores do not consistently relate to
-changes in the ordinal pick rate categories in a way that increases or
-decreases together.
+The resulting p-value from this test was greater than the conventional
+alpha level of 0.05. This basically means that the evidence is not
+sufficient enough to reject the null hypothesis of *no association*
+between Recoil and PickRate.I cannot assert that changes in Recoil
+scores are consistently related to changes in PickRate categories.
 
-However; Kendall's Tau requires that both variables be ordinal or
-continuous. In my dataframe, Recoil is continuous, and PickRateNumeric
-isordinal encoding of PickRate, with "Low Pick Rate" as 1, "Average Pick
-Rate" as 2, and "High Pick Rate" as 3.
+However, it is important to note that failing to reject the null
+hypothesis **does not equate to accepting it.** The absence of
+significant evidence is not the same as evidence of absence. Therefore,
+we cannot **conclusively state that there is no relationship between
+Recoil and PickRate; only that our study did not find sufficient
+evidence of such a relationship under the conditions tested.**
 
+Regarding the use of Kendall's Tau, given that Recoil is a continuous
+variable and PickRateNumeric is an ordinal encoding of PickRate, the
+test is appropriate and meets assumptions. Kendall's Tau is designed to
+handle such types of data, making it a suitable choice for this
+analysis.
 
+A power analysis would help determine if the study had a sufficient
+sample size to detect an effect, if one exists. A low power could mean
+that the study might not be able to detect a small but potentially
+meaningful association. Therefore, interpreting these results should be
+done in the context of the study's power, alongside the considerations
+of the test's assumptions and the data's characteristics.
 
 # Limitations
 
-If I had quantitative statistics for the Pick Rate column that may be
-helpful to see a significance. The Pick Rate column is just 3 levels of
-category which is not descriptive enough in this case to really pull any
-trend out. If I had the "raw data" that ubisoft does not formally
-release then I could see exact percentages for pick ratios of each
-operater per x amount of rounds in x amount of matches.
+In reflecting on the results of the Kendall's Tau correlation test and
+the p-value exceeding 0.05, it's crucial to consider the limitations of
+the dataset and how they might influence the findings. The categorical
+nature of the Pick Rate column, with only three levels, limits the
+granularity of the analysis. A more detailed quantitative measure of
+Pick Rate, such as exact percentages of operator picks per number of
+rounds in a given number of matches, could potentially reveal trends
+that the current categorical data obscures.
 
-Similarly, the scores for recoil are not nearly as comprehensive as they
-are on Ubisoft's end. additionally, there are many additional
-attachments that aid in dampening recoil, these statistics are not
-accounted for in my data.
+Similarly, the Recoil scores in my dataset lack the depth and detail
+available to Ubisoft. The omission of additional attachments that affect
+recoil is a significant limitation, as these could have a considerable
+impact on the weapon's performance and, consequently, its pick rate.
+This limitation highlights the potential for more nuanced and
+comprehensive data to yield different insights.
 
-Additionally for a next direction I should explore "Ban" Rates instead
-of pick rates to see any correlation between highly-banned operators and
-their weapon's recoil.
+For future research directions, considering 'Ban Rates' of operators in
+relation to their weapon's recoil could offer another valuable
+perspective. This approach might uncover correlations between high ban
+rates and specific weapon characteristics, offering a different angle
+from which to understand player preferences and game balance.
 
-This kind of exploration would probably benefit from factor analysis as
-well as mixed effects models, however my data is unfit for these
-purposes. Specifically, my features are not continuous and also not
-numeric. Multicollinearity: High correlations among some of these
-variables are likely, given that weapon attributes are often designed to
-balance each other (e.g., high damage might be balanced by high recoil).
-This could make it difficult to separate out distinct factors.
+Such investigations would benefit from more advanced statistical
+techniques like factor analysis and mixed-effects models. However, the
+current dataset, with its non-continuous and non-numeric features, is
+unsuitable for these methods. Additionally, the potential for
+multicollinearity, given that weapon attributes are often designed to
+balance each other, poses a challenge. High damage, for example, might
+be counterbalanced by high recoil, making it difficult to disentangle
+these factors.
+
+In light of these limitations, a power analysis is particularly
+relevant. It would help in assessing whether the current study had
+enough power to detect a small but meaningful relationship, if one
+exists. The absence of significant findings in this study might be due
+to insufficient data detail or sample size, rather than a true lack of
+correlation. This consideration underscores the need for a more
+comprehensive dataset and a robust analytical approach to more
+accurately evaluate the relationship between weapon characteristics and
+player choices in the game.
