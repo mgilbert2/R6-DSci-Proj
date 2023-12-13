@@ -1,10 +1,13 @@
 ---
-title: "R6 Seige EDA"
+title: "R6 Seige Report"
 author: "Makenzy Gilbert"
 date: "2023-10-26"
-output: html_document
-editor_options: 
-  markdown: 
+output:
+  word_document: default
+  html_document: default
+  pdf_document: default
+editor_options:
+  markdown:
     wrap: 72
 ---
 
@@ -12,7 +15,7 @@ editor_options:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-# Rainbow Six Siege Exploratory Data Analysis
+# Rainbow Six Siege Recoil Analysis
 
 ## Introduction
 
@@ -138,7 +141,7 @@ print(weapons_table1)
 ```
 
 The next packaging issue is the concatenated "overlapping" of operators
-per each weapon. I need to split these. In my first attem
+per each weapon. I need to split these.
 
 ```{r}
 weapons_table1 <- weapons_table1 %>%
@@ -186,9 +189,7 @@ the data stems from is ranked by these ranks: (worst to best).
 
 My data comes from the upper echelon of skilled players. It is the top
 half of all ranked players that provide this data. It is a set of
-extremely knowledgeable and experienced players. This is important due
-to the fact that these sets of players attention is extremely focus
-in-game.
+extremely knowledgeable and experienced players. This is important due to the fact that these sets of players attention is extremely focused in-game. So, to investigate underlying tendencies to minimize attentional demand or “cognitive load”, I used this set of pick rate data.
 
 High pick, average pick, and low pick rates have been determined by a
 metric as follows from Ubisoft: Percentage per x amount of won games:
