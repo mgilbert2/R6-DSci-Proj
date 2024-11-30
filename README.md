@@ -1,5 +1,5 @@
 # R6-DSci-Proj
-R6 Project
+Rainbow Six Siege Data Science; User experience analysis of recoil statistics in highly picked operators
 
 
 You will need to have this google sheet/access to google sheets/gmail.
